@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.graph.test.NodeCreateUtils;
 
 import de.fuberlin.wiwiss.d2rq.algebra.AliasMap;
 import de.fuberlin.wiwiss.d2rq.algebra.Attribute;
@@ -178,7 +181,26 @@ public class GraphPatternTranslatorTest extends TestCase {
 		List results = new ArrayList();
 		String[] parts = pattern.split("\\s+\\.\\s*");
 		for (int i = 0; i < parts.length; i++) {
-			results.add(Triple.create(MapFixture.prefixes(), parts[i]));
+			
+			// this Triple.create method was removed between Jena 2.6.0 and 2.6.1
+			// the method body looks like the following lines:
+			//
+			// StringTokenizer st = new StringTokenizer( fact );
+			// Node sub = NodeCreateUtils.create( pm, st.nextToken() );
+			// Node pred = NodeCreateUtils.create( pm, st.nextToken() );
+			// Node obj = NodeCreateUtils.create( pm, st.nextToken() );
+			// return Triple.create( sub, pred, obj );
+			//
+			// => so let's apply this code ;)
+			//
+			// zazi (http://github.com/zazi)
+			
+			StringTokenizer st = new StringTokenizer( parts[i] );
+			Node sub = NodeCreateUtils.create( MapFixture.prefixes(), st.nextToken() );
+			Node pred = NodeCreateUtils.create( MapFixture.prefixes(), st.nextToken() );
+			Node obj = NodeCreateUtils.create( MapFixture.prefixes(), st.nextToken() );
+			
+			results.add(Triple.create(sub, pred, obj));
 		}
 		return results;
 	}
